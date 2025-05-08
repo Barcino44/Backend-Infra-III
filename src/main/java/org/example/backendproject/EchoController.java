@@ -17,7 +17,7 @@ public class EchoController {
     @Autowired
     ProductRepository repositoryProduct;
 
-    @PostMapping("client/login")
+    @PostMapping("/client/login")
     public ResponseEntity<?> loginAdmin(@RequestBody LoginRequestClient loginRequest) {
         var client = repositoryClient.searchByLogin(loginRequest.getEmail(), loginRequest.getPassword());
         if (client.isEmpty()) {
@@ -26,7 +26,7 @@ public class EchoController {
             return ResponseEntity.status(200).body(client.get());
         }
     }
-    @PostMapping("client/register")
+    @PostMapping("/client/register")
     public ResponseEntity<?> loginRegister(@RequestBody Client client) {
         var c = repositoryClient.searchByEmail(client.getEmail());
         if(c.isPresent()){
