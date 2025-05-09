@@ -36,6 +36,11 @@ public class EchoController {
             return ResponseEntity.status(200).body(new RegisterResponse("Se ha añadido un cliente"));
         }
     }
+    @GetMapping("/client/getProducts")
+    public ResponseEntity<?> listDoctorPage() {
+        var products = repositoryProduct.findAll();
+        return ResponseEntity.status(200).body(products);
+    }
 }
 
 

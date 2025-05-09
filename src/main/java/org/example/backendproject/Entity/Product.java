@@ -6,25 +6,20 @@ import jakarta.persistence.*;
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-
     private Long id;
     private String name;
     private double price;
     private String description;
-
-    @ManyToOne
-    @JoinColumn(name = "productID")
-    private Product medition;
-
+    private String imageUrl;
 
     public Product() {
 
     }
-
-    public Product(String name, double price, String description) {
-        this.name =  name;
+    public Product(String name, double price, String description, String imageUrl) {
+        this.name = name;
         this.price = price;
         this.description = description;
+        this.imageUrl = imageUrl;
     }
 
     public Long getId() {
@@ -58,4 +53,13 @@ public class Product {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
 }
