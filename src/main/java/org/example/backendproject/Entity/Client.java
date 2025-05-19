@@ -1,14 +1,18 @@
 package org.example.backendproject.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-
-import java.util.List;
 
 @Entity
 public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @OneToOne
+    @JoinColumn(name="shoppingCart_Id")
+    @JsonIgnore
+    private ShoppingCart shoppingCar;
 
     private String name;
 
@@ -55,5 +59,13 @@ public class Client {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public ShoppingCart getShoppingCar() {
+        return shoppingCar;
+    }
+
+    public void setShoppingCar(ShoppingCart shoppingCar) {
+        this.shoppingCar = shoppingCar;
     }
 }
