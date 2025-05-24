@@ -113,4 +113,28 @@ public class EchoController {
         }
         return ResponseEntity.status(500).body("Algo salio mal");
     }
+    @PostMapping("/shoppingCart/checkout/client/{clientId}")
+    public ResponseEntity<?> checkoutCart(@PathVariable Long clientId) {
+        Optional<Client> clientOpt = clientRepository.findClientById(clientId);
+        if (clientOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente no encontrado");
+        }
+        ShoppingCart shoppingCart = clientOpt.get().getShoppingCar();
+        if (shoppingCart == null || shoppingCart.getCartItems() == null || shoppingCart.getCartItems().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El carrito está vacío");
+        }
+
+        // Se guardan los datos del carrito antes de vaciarlo
+        List<CartItem> purchasedItems = new ArrayList<>(shoppingCart.getCartItems());
+
+        // Vaciar carrito
+        for (CartItem item : new ArrayList<>(shoppingCart.getCartItems())) {
+            shoppingCart.getCartItems().remove(item);
+            cartItemRepository.delete(item);
+        }
+        shoppingCartRepository.save(shoppingCart);
+
+        // Resumen de la compra
+        return ResponseEntity.status(HttpStatus.OK).body(purchasedItems);
+    }
 }
