@@ -12,9 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @CrossOrigin(maxAge = 3600)
 @RestController
@@ -114,7 +112,10 @@ public class EchoController {
         return ResponseEntity.status(500).body("Algo salio mal");
     }
     @PostMapping("/shoppingCart/checkout/client/{clientId}")
-    public ResponseEntity<?> checkoutCart(@PathVariable Long clientId) {
+    public ResponseEntity<?> checkoutCart(
+            @PathVariable Long clientId,
+            @RequestBody PurchaseFormRequest formRequest) {
+
         Optional<Client> clientOpt = clientRepository.findClientById(clientId);
         if (clientOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente no encontrado");
@@ -123,6 +124,15 @@ public class EchoController {
         if (shoppingCart == null || shoppingCart.getCartItems() == null || shoppingCart.getCartItems().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El carrito está vacío");
         }
+
+        // Simulación de procesamiento de pago
+        // (Nunca guardar datos de tarjeta en texto plano en producción)
+        String resumenPago = String.format(
+                "Procesando pago para %s, dirección: %s, tarjeta terminada en: ****%s",
+                formRequest.getNombreCompleto(),
+                formRequest.getDireccion(),
+                formRequest.getNumeroTarjeta().substring(formRequest.getNumeroTarjeta().length() - 4)
+        );
 
         // Se guardan los datos del carrito antes de vaciarlo
         List<CartItem> purchasedItems = new ArrayList<>(shoppingCart.getCartItems());
@@ -134,7 +144,12 @@ public class EchoController {
         }
         shoppingCartRepository.save(shoppingCart);
 
-        // Resumen de la compra
-        return ResponseEntity.status(HttpStatus.OK).body(purchasedItems);
+        // Resumen de la compra y datos del formulario
+        Map<String, Object> response = new HashMap<>();
+        response.put("mensaje", "Compra realizada exitosamente");
+        response.put("resumenPago", resumenPago);
+        response.put("itemsComprados", purchasedItems);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
