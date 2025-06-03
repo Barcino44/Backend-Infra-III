@@ -1,10 +1,7 @@
 package org.example.backendproject;
 
 
-import org.example.backendproject.Entity.CartItem;
-import org.example.backendproject.Entity.Client;
-import org.example.backendproject.Entity.Product;
-import org.example.backendproject.Entity.ShoppingCart;
+import org.example.backendproject.Entity.*;
 import org.example.backendproject.ResponseRequest.*;
 import org.example.backendproject.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +24,8 @@ public class EchoController {
     private ShoppingCartRepository shoppingCartRepository;
     @Autowired
     private CartItemRepository cartItemRepository;
+    @Autowired
+    private PurchaseRepository purchaseRepository;
     @PostMapping("/client/login")
     public ResponseEntity<?> loginAdmin(@RequestBody LoginRequestClient loginRequest) {
         var client = repositoryClient.searchByLogin(loginRequest.getEmail(), loginRequest.getPassword());
@@ -114,42 +113,19 @@ public class EchoController {
     @PostMapping("/shoppingCart/checkout/client/{clientId}")
     public ResponseEntity<?> checkoutCart(
             @PathVariable Long clientId,
-            @RequestBody PurchaseFormRequest formRequest) {
-
+            @RequestBody Purchase purchase) {
         Optional<Client> clientOpt = clientRepository.findClientById(clientId);
         if (clientOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente no encontrado");
+            return ResponseEntity.status(404).body("Cliente no encontrado");
         }
         ShoppingCart shoppingCart = clientOpt.get().getShoppingCar();
-        if (shoppingCart == null || shoppingCart.getCartItems() == null || shoppingCart.getCartItems().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El carrito está vacío");
-        }
-
-        // Simulación de procesamiento de pago
-        // (Nunca guardar datos de tarjeta en texto plano en producción)
-        String resumenPago = String.format(
-                "Procesando pago para %s, dirección: %s, tarjeta terminada en: ****%s",
-                formRequest.getNombreCompleto(),
-                formRequest.getDireccion(),
-                formRequest.getNumeroTarjeta().substring(formRequest.getNumeroTarjeta().length() - 4)
-        );
-
-        // Se guardan los datos del carrito antes de vaciarlo
-        List<CartItem> purchasedItems = new ArrayList<>(shoppingCart.getCartItems());
-
-        // Vaciar carrito
         for (CartItem item : new ArrayList<>(shoppingCart.getCartItems())) {
             shoppingCart.getCartItems().remove(item);
             cartItemRepository.delete(item);
         }
         shoppingCartRepository.save(shoppingCart);
-
-        // Resumen de la compra y datos del formulario
-        Map<String, Object> response = new HashMap<>();
-        response.put("mensaje", "Compra realizada exitosamente");
-        response.put("resumenPago", resumenPago);
-        response.put("itemsComprados", purchasedItems);
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        purchase.setClient(clientOpt.get());
+        purchaseRepository.save(purchase);
+        return ResponseEntity.status(200).body(new RegisterResponse("Compra realizada correctamente"));
     }
 }
